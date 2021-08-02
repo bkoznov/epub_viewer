@@ -43,24 +43,28 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: loading
-              ? CircularProgressIndicator()
-              : FlatButton(
-                  onPressed: () async {
-                    Directory appDocDir =
-                        await getApplicationDocumentsDirectory();
-                    print('$appDocDir');
+            child: loading
+                ? CircularProgressIndicator()
+                : StreamBuilder(
+                    stream: EpubViewer.locatorStream,
+                    builder: (BuildContext context, AsyncSnapshot<dynamic> snap) {
+                      if (snap.hasData) print('LOCATOR: ${EpubLocator.fromJson(jsonDecode(snap.data))}');
+                      print('snap ' + snap.toString());
+                      return FlatButton(
+                        onPressed: () async {
+                          Directory appDocDir = await getApplicationDocumentsDirectory();
+                          print('$appDocDir');
 
-                    String iosBookPath = '${appDocDir.path}/chair.epub';
-                    print(iosBookPath);
-                    String androidBookPath = 'file:///android_asset/3.epub';
-                    EpubViewer.setConfig(
-                        themeColor: Theme.of(context).primaryColor,
-                        identifier: "iosBook",
-                        scrollDirection: EpubScrollDirection.ALLDIRECTIONS,
-                        allowSharing: true,
-                        enableTts: true,
-                        nightMode: true);
+                          String iosBookPath = '${appDocDir.path}/chair.epub';
+                          print(iosBookPath);
+                          String androidBookPath = 'file:///android_asset/3.epub';
+                          EpubViewer.setConfig(
+                              themeColor: Theme.of(context).primaryColor,
+                              identifier: "iosBook",
+                              scrollDirection: EpubScrollDirection.ALLDIRECTIONS,
+                              allowSharing: true,
+                              enableTts: true,
+                              nightMode: true);
 //                    EpubViewer.open(
 //                      Platform.isAndroid ? androidBookPath : iosBookPath,
 //                      lastLocation: EpubLocator.fromJson({
@@ -73,28 +77,22 @@ class _MyAppState extends State<MyApp> {
 //                      }),
 //                    );
 
-                    await EpubViewer.openAsset(
-                      'assets/4.epub',
-                      lastLocation: EpubLocator.fromJson({
-                        "bookId": "2239",
-                        "href": "/OEBPS/ch06.xhtml",
-                        "created": 1539934158390,
-                        "locations": {
-                          "cfi": "epubcfi(/0!/4/4[simple_book]/2/2/6)"
-                        }
-                      }),
-                    );
-                    // get current locator
-                    EpubViewer.locatorStream.listen((locator) {
-                      print(
-                          'LOCATOR: ${EpubLocator.fromJson(jsonDecode(locator))}');
-                    });
-                  },
-                  child: Container(
-                    child: Text('open epub'),
-                  ),
-                ),
-        ),
+                          await EpubViewer.openAsset(
+                            'assets/4.epub',
+                            lastLocation: EpubLocator.fromJson({
+                              "bookId": "2239",
+                              "href": "/OEBPS/ch06.xhtml",
+                              "created": 1539934158390,
+                              "locations": {"cfi": "epubcfi(/0!/4/4[simple_book]/2/2/6)"}
+                            }),
+                          );
+                          // get current locator
+                        },
+                        child: Container(
+                          child: Text('open epub'),
+                        ),
+                      );
+                    })),
       ),
     );
   }
@@ -111,9 +109,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   startDownload() async {
-    Directory? appDocDir = Platform.isAndroid
-        ? await getExternalStorageDirectory()
-        : await getApplicationDocumentsDirectory();
+    Directory? appDocDir = Platform.isAndroid ? await getExternalStorageDirectory() : await getApplicationDocumentsDirectory();
 
     String path = appDocDir!.path + '/chair.epub';
     File file = File(path);

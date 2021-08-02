@@ -2,6 +2,7 @@ package com.jideguru.epub_viewer;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.Log;
 
 import java.util.Map;
 
@@ -28,6 +29,7 @@ public class EpubViewerPlugin implements MethodCallHandler {
     context = registrar.context();
     activity = registrar.activity();
     messenger = registrar.messenger();
+    Log.i("readLocator", "about to set messenger 0" + messenger.toString());
 
     final MethodChannel channel = new MethodChannel(registrar.messenger(), "epub_viewer");
     channel.setMethodCallHandler(new EpubViewerPlugin());
@@ -52,6 +54,7 @@ public class EpubViewerPlugin implements MethodCallHandler {
       Map<String,Object> arguments = (Map<String, Object>) call.arguments;
       String bookPath = arguments.get("bookPath").toString();
       String lastLocation = arguments.get("lastLocation").toString();
+      Log.i("readLocator", "about to set messenger 00" + messenger.toString());
 
       reader = new Reader(context,messenger,config);
       reader.open(bookPath, lastLocation);

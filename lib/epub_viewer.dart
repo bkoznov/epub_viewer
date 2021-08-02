@@ -14,7 +14,7 @@ part 'utils/util.dart';
 
 class EpubViewer {
   static const MethodChannel _channel = const MethodChannel('epub_viewer');
-  static const EventChannel _pageChannel = const EventChannel('page');
+  static const EventChannel _pageChannel = const EventChannel('epub_viewer/page');
 
   /// Configure Viewer's with available values
   ///
@@ -40,13 +40,12 @@ class EpubViewer {
     await _channel.invokeMethod('setConfig', agrs);
   }
 
-  /// bookPath should be a local file.
+  /// bookPath should be a locwwal file.
   /// Last location is only available for android.
   static void open(String bookPath, {EpubLocator? lastLocation}) async {
     Map<String, dynamic> agrs = {
       "bookPath": bookPath,
-      'lastLocation':
-          lastLocation == null ? '' : jsonEncode(lastLocation.toJson()),
+      'lastLocation': lastLocation == null ? '' : jsonEncode(lastLocation.toJson()),
     };
     await _channel.invokeMethod('open', agrs);
   }
@@ -57,8 +56,7 @@ class EpubViewer {
     if (extension(bookPath) == '.epub') {
       Map<String, dynamic> agrs = {
         "bookPath": (await Util.getFileFromAsset(bookPath)).path,
-        'lastLocation':
-            lastLocation == null ? '' : jsonEncode(lastLocation.toJson()),
+        'lastLocation': lastLocation == null ? '' : jsonEncode(lastLocation.toJson()),
       };
       await _channel.invokeMethod('open', agrs);
     } else {
@@ -70,8 +68,8 @@ class EpubViewer {
   static Stream get locatorStream {
     Stream pageStream = _pageChannel
         .receiveBroadcastStream()
-        .map((value) => Platform.isAndroid ? value : '{}');
-
+        .distinct()
+        .map((value) => Platform.isAndroid ? print('WE GOT ANDROID DATA LOCATION ' + value.toString()) : '{"page" : "$value"}');
     return pageStream;
   }
 }

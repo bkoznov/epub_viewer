@@ -31,12 +31,32 @@ public class Reader implements OnHighlightListener, ReadLocatorListener, FolioRe
     public FolioReader folioReader;
     private Context context;
     public MethodChannel.Result result;
-    private EventChannel.EventSink pageEventSink;
-    private BinaryMessenger messenger;
+    public EventChannel.EventSink pageEventSink;
+    private BinaryMessenger globalMessenger;
     private ReadLocator  read_locator;
-    private static final String PAGE_CHANNEL = "page";
+    private static final String PAGE_CHANNEL = "epub_viewer/page";
+    private EventChannel e;
 
-    Reader(Context context, BinaryMessenger messenger,ReaderConfig config){
+    public EventChannel.StreamHandler xyz = new EventChannel.StreamHandler() {
+
+        @Override
+        public void onListen(Object o, EventChannel.EventSink eventSink) {
+            Log.i("readLocator", "setting page event sink");
+
+            pageEventSink = eventSink;
+        }
+
+        @Override
+        public void onCancel(Object o) {
+            Log.i("readLocator", "canceling page event sink");
+
+
+        }
+    };
+
+    Reader(Context context, BinaryMessenger readerMessenger,ReaderConfig config){
+        Log.i("readLocator", "about to set messenger 1" + readerMessenger.toString());
+        globalMessenger = readerMessenger;
         this.context = context;
         readerConfig = config;
         getHighlightsAndSave();
@@ -46,8 +66,11 @@ public class Reader implements OnHighlightListener, ReadLocatorListener, FolioRe
                 .setReadLocatorListener(this)
                 .setOnClosedListener(this);
 
-     
-        setPageHandler(messenger);
+        Log.i("readLocator", "about to set paged handler");
+
+        setPageHandler();
+        Log.i("readLocator", "about to set paged handler4");
+
     }
 
     public void open(String bookPath, String lastLocation){
@@ -76,20 +99,15 @@ public class Reader implements OnHighlightListener, ReadLocatorListener, FolioRe
         folioReader.close();
     }
 
-    private void setPageHandler(BinaryMessenger messenger){
-//        final MethodChannel channel = new MethodChannel(registrar.messenger(), "page");
+    private void setPageHandler(){
+//        final MethodChannel channel = new MethodChannel(registrar.pageHandlerMessenger(), "page");
 //        channel.setMethodCallHandler(new EpubKittyPlugin());
-        new EventChannel(messenger,PAGE_CHANNEL).setStreamHandler(new EventChannel.StreamHandler() {
-            @Override
-            public void onListen(Object o, EventChannel.EventSink eventSink) {
-                pageEventSink = eventSink;
-            }
+        Log.i("readLocator", "about to set pageHandlerMessenger " + globalMessenger.toString() + " and page channel" + PAGE_CHANNEL);
 
-            @Override
-            public void onCancel(Object o) {
+        e = new EventChannel(globalMessenger,PAGE_CHANNEL);
+        e.setStreamHandler(xyz);
+        Log.i("readLocator", "just set paged handle 3"  + e.toString() + " and xyz" + xyz.toString());
 
-            }
-        });
     }
 
     private void getHighlightsAndSave() {
@@ -156,7 +174,16 @@ public class Reader implements OnHighlightListener, ReadLocatorListener, FolioRe
         Log.i("readLocator", "-> saveReadLocator -> " + read_locator.toJson());
 
         if (pageEventSink != null){
+
+            //todo
+            Log.i("readLocator", " success !");
             pageEventSink.success(read_locator.toJson());
+        } else {
+
+//            setPageHandler();
+//            pageEventSink.success(read_locator.toJson());
+
+            Log.i("readLocator", "page event sink is null!!!!!");
         }
     }
 
@@ -169,6 +196,7 @@ public class Reader implements OnHighlightListener, ReadLocatorListener, FolioRe
     public void saveReadLocator(ReadLocator readLocator) {
         read_locator = readLocator;
     }
+
 
 
 }
