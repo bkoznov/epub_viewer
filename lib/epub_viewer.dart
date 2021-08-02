@@ -14,7 +14,7 @@ part 'utils/util.dart';
 
 class EpubViewer {
   static const MethodChannel _channel = const MethodChannel('epub_viewer');
-  static const EventChannel _pageChannel = const EventChannel('page');
+  static const EventChannel _pageChannel = const EventChannel('com.yourname.yourname/typeData');
 
   /// Configure Viewer's with available values
   ///
@@ -45,8 +45,7 @@ class EpubViewer {
   static void open(String bookPath, {EpubLocator? lastLocation}) async {
     Map<String, dynamic> agrs = {
       "bookPath": bookPath,
-      'lastLocation':
-          lastLocation == null ? '' : jsonEncode(lastLocation.toJson()),
+      'lastLocation': lastLocation == null ? '' : jsonEncode(lastLocation.toJson()),
     };
     await _channel.invokeMethod('open', agrs);
   }
@@ -57,8 +56,7 @@ class EpubViewer {
     if (extension(bookPath) == '.epub') {
       Map<String, dynamic> agrs = {
         "bookPath": (await Util.getFileFromAsset(bookPath)).path,
-        'lastLocation':
-            lastLocation == null ? '' : jsonEncode(lastLocation.toJson()),
+        'lastLocation': lastLocation == null ? '' : jsonEncode(lastLocation.toJson()),
       };
       await _channel.invokeMethod('open', agrs);
     } else {
@@ -68,9 +66,10 @@ class EpubViewer {
 
   /// Stream to get EpubLocator for android and pageNumber for iOS
   static Stream get locatorStream {
-    Stream pageStream = _pageChannel
-        .receiveBroadcastStream()
-        .map((value) => Platform.isAndroid ? value : '{}');
+    // BinaryMessenger().setMessageHandler("com.yourname.yourname/typeData", (message) => print('got message' + message.toString()));
+    // print('getting locator stream!' +
+    //     BinaryMessenger().checkMessageHandler("com.yourname.yourname/typeData", (message) => print('got message' + message.toString())));
+    Stream pageStream = _pageChannel.receiveBroadcastStream().map((value) => Platform.isAndroid ? value : '{}');
 
     return pageStream;
   }
